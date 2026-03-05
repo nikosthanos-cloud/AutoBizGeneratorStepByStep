@@ -129,6 +129,22 @@ npm run dev
 
 Λεπτομέρειες και εναλλακτικά (Docker) στο **`scripts/start-local.md`**.
 
+### Database: "Can't reach database server" (P1001)
+
+Αν χρησιμοποιείς **Supabase** (ή άλλο hosted Postgres) και βλέπεις:
+
+```text
+Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
+```
+
+1. **SSL:** Πρόσθεσε στο `DATABASE_URL` query string: **`?sslmode=require`**  
+   Παράδειγμα:  
+   `postgresql://postgres.[ref]:[PASSWORD]@db.[ref].supabase.co:5432/postgres?sslmode=require`
+
+2. **Supabase project:** Στο Supabase Dashboard έλεγξε ότι το project δεν είναι paused (free tier παύει μετά από αδράνεια).
+
+3. **Firewall / CI:** Αν τρέχει σε GitHub Actions ή άλλο δίκτυο, βεβαιώσου ότι επιτρέπεται outbound TCP στο port 5432 προς το host του DB. Σε Supabase, στο Dashboard → Settings → Database δες το "Connection string" και χρησιμοποίησέ το με `?sslmode=require`.
+
 ---
 
 ## Architecture Map
