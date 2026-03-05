@@ -1,0 +1,35 @@
+# advisorai.gr – Backend (NestJS) for Cloud Run / Railway
+# Build context: repository root (so we can COPY backend/ and config/)
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy backend package files
+COPY backend/package*.json backend/
+COPY backend/prisma backend/prisma/
+
+WORKDIR /app/backend
+RUN npm ci
+
+# Copy backend source and generate Prisma client
+COPY backend/ .
+RUN npx prisma generate
+RUN npm run build
+
+# Production image
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+COPY --from=builder /app/backend/package*.json ./
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/prisma ./prisma
+
+# Prisma migrate deploy is run in CI; at runtime only client is needed
+RUN npx prisma generate
+
+EXPOSE 3001
+
+CMD ["node", "dist/main.js"]

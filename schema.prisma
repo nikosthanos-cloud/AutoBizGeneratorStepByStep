@@ -1,0 +1,217 @@
+// advisorai.gr - Prisma Schema
+// PostgreSQL provider - Section 5 spec
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ ENUMS ============
+
+enum UserRole {
+  ADMIN
+  USER
+  VIEWER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  CONFIRMED
+  PROMPT_GENERATED
+  WON
+  LOST
+  SENT_TO_BUILDER
+}
+
+enum BuildStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AIUsageType {
+  CHAT
+  PROPOSAL
+  BUILD_PROMPT
+}
+
+enum SelectedPackage {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+// ============ MODELS ============
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  name       String?
+  role       UserRole @default(USER)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  customers   Customer[]
+  aiUsageLogs AIUsageLog[]
+  auditLogs   AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Customer {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  name       String?
+  userId     String?  @map("user_id") @db.Uuid
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  leads Lead[]
+
+  @@index([email])
+  @@index([userId])
+}
+
+model Lead {
+  id               String           @id @default(uuid()) @db.Uuid
+  customerId       String?          @map("customer_id") @db.Uuid
+  status           LeadStatus       @default(NEW)
+  source           String?
+  selectedPackage  SelectedPackage? @map("selected_package")
+  problemSummary   String?          @map("problem_summary") @db.Text
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+
+  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  conversations Conversation[]
+  proposal     Proposal?
+  aiUsageLogs  AIUsageLog[]
+  buildPrompts BuildPrompt[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([selectedPackage])
+  @@index([created_at])
+}
+
+model Conversation {
+  id            String   @id @default(uuid()) @db.Uuid
+  leadId        String   @map("lead_id") @db.Uuid
+  title         String?
+  transcriptJson Json?   @map("transcript_json") @db.JsonB
+  modelUsed     String?  @map("model_used")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([created_at])
+}
+
+model Proposal {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @unique @map("lead_id") @db.Uuid
+  content   String?  @db.Text
+  version   Int      @default(1)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+}
+
+model BuildPrompt {
+  id         String   @id @default(uuid()) @db.Uuid
+  leadId     String?  @map("lead_id") @db.Uuid
+  name       String
+  slug       String   @unique
+  content    String?  @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  lead        Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  builderRuns BuilderRun[]
+
+  @@index([leadId])
+  @@index([slug])
+}
+
+model BuilderRun {
+  id            String      @id @default(uuid()) @db.Uuid
+  buildPromptId String      @map("build_prompt_id") @db.Uuid
+  status        BuildStatus @default(PENDING)
+  input         String?     @db.Text
+  output        String?     @db.Text
+  startedAt     DateTime?   @map("started_at")
+  completedAt   DateTime?   @map("completed_at")
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  buildPrompt BuildPrompt @relation(fields: [buildPromptId], references: [id], onDelete: Cascade)
+
+  @@index([buildPromptId])
+  @@index([status])
+  @@index([created_at])
+}
+
+model AIUsageLog {
+  id                String      @id @default(uuid()) @db.Uuid
+  userId            String?     @map("user_id") @db.Uuid
+  leadId            String?     @map("lead_id") @db.Uuid
+  type              AIUsageType
+  model             String
+  promptTokens      Int?        @map("prompt_tokens")
+  completionTokens  Int?        @map("completion_tokens")
+  totalTokens       Int?        @map("total_tokens")
+  costEstimate      Float?      @map("cost_estimate")
+  requestId         String?     @map("request_id")
+  created_at        DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([leadId])
+  @@index([type])
+  @@index([model])
+  @@index([created_at])
+}
+
+model SystemPrompt {
+  id         String   @id @default(uuid()) @db.Uuid
+  slug       String   @unique
+  content    String   @db.Text
+  updated_at DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  payload    Json?
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([created_at])
+}

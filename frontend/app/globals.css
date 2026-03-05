@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0f0f12;
+    --foreground: #e8e8ed;
+    --card: #18181c;
+    --card-border: #2a2a30;
+    --accent: #6366f1;
+    --accent-hover: #818cf8;
+    --muted: #71717a;
+    /* shadcn/ui compatible (space-separated for hsl(var(--x))) */
+    --border: 240 6% 18%;
+    --input: 240 6% 18%;
+    --ring: 243 75% 59%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 22%;
+    --secondary-foreground: 0 0% 98%;
+    --muted-foreground: 240 5% 65%;
+    --sidebar: 240 6% 14%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-border: 240 6% 18%;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+}

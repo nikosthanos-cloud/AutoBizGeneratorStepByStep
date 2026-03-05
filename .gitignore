@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+backend/dist/
+frontend/.next/
+frontend/out/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs and debug
+*.log
+npm-debug.log*
+
+# Prisma
+backend/prisma/migrations/*_migration_lock.toml
+
+# Vercel
+.vercel
+
+# Testing
+coverage/
+.nyc_output/
