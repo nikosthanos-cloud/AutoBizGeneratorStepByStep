@@ -1,12 +1,12 @@
-import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { validateEnv } from './common/validate-env';
 
-// express.raw() for Stripe webhook (must use require so .raw is available in CJS build)
+// require() so default exports work in CJS build (Railway/Docker)
 const expressRaw = require('express').raw;
+const cookieParser = require('cookie-parser');
 
 async function bootstrap() {
   validateEnv();
