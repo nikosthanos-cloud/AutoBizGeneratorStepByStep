@@ -92,7 +92,7 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-**Supabase:** Χρησιμοποίησε πάντα το **transaction pooler** connection (όχι το direct DB). Στο Free Plan το direct host (`db.xxx.supabase.co`) είναι IPv6-only και δεν είναι reachable από GitHub Actions (IPv4). Στο Dashboard → **Project Settings → Database** διάλεξε **Connection string** με **"Use connection pooling"** (host `aws-0-<region>.pooler.supabase.com`, port **6543**) και πρόσθεσε `?sslmode=require`. Βάλε αυτό το URL στο `DATABASE_URL` (τοπικά και στο GitHub secret). Για migrations τρέξε **`npm run prisma:migrate:deploy`** (προσθέτει `sslmode=require` αν λείπει).
+**Supabase:** Χρησιμοποίησε πάντα το **pooler** (όχι το direct DB). Στο Free Plan το direct host είναι IPv6-only και δεν φτάνει από GitHub Actions. Για **migrations και CI** χρειάζεσαι **session mode** (όχι transaction): στο Dashboard → **Project Settings → Database** πάρε το connection string με **connection pooling** και χρησιμοποίησε **port 5432** (session mode) στο pooler host, π.χ. `aws-1-eu-west-2.pooler.supabase.com:5432` — **όχι** port 6543 (transaction mode), αλλιώς το `prisma migrate deploy` μπορεί να κολλάει πάνω από 7 λεπτά. Πρόσθεσε `?sslmode=require` και βάλ’ το ως `DATABASE_URL` (και στο GitHub secret). Για migrations: **`npm run prisma:migrate:deploy`**.
 
 Το seed δημιουργεί **admin λογαριασμό**:
 
@@ -139,16 +139,16 @@ npm run dev
 Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 ```
 
-**Supabase (Free Plan): χρήση transaction pooler (υποχρεωτικό)**  
-Το direct DB host (`db.xxx.supabase.co`) είναι **IPv6-only**· το IPv4 add-on δεν είναι διαθέσιμο στο Free Plan, οπότε GitHub Actions (IPv4) δεν μπορούν να συνδεθούν. Χρησιμοποίησε το **connection pooler**:
+**Supabase (Free Plan): χρήση pooler (υποχρεωτικό) — session mode για migrations**  
+Το direct DB host (`db.xxx.supabase.co`) είναι **IPv6-only**· GitHub Actions δεν μπορούν να συνδεθούν. Χρησιμοποίησε το **pooler**. Για **Prisma migrate** χρειάζεται **session mode** (port **5432**), όχι transaction (6543)· αλλιώς το migrate μπορεί να κολλάει πολλά λεπτά.
 
 1. **Dashboard** → **Project Settings → Database** → **Connection string**.
-2. Επίλεξε **"Use connection pooling"** (Transaction mode).
-3. Πάρε το URL με host **`aws-0-<region>.pooler.supabase.com`** και port **6543**.
-4. Πρόσθεσε **`?sslmode=require`** στο URL και βάλ’ το ως **`DATABASE_URL`** (τοπικά και στο GitHub Actions secret).
+2. Επίλεξε **"Use connection pooling"** και πάρε το host `aws-1-<region>.pooler.supabase.com` (ή παρόμοιο).
+3. Για **migrations / CI:** χρησιμοποίησε **port 5432** (session mode). Μη χρησιμοποιείς port 6543 (transaction) για migrate.
+4. Πρόσθεσε **`?sslmode=require`** και βάλ’ το ως **`DATABASE_URL`** (και στο GitHub Actions secret).
 
-Παράδειγμα pooler URL:  
-`postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?sslmode=require`
+Παράδειγμα (session mode, για migrations):  
+`postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-1-[REGION].pooler.supabase.com:5432/postgres?sslmode=require`
 
 Επιπλέον:
 
@@ -204,11 +204,12 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 
 1. **Prisma Sync**  
    - Τρέχει `npx prisma migrate deploy` στο backend.  
-   - Χρειάζεται GitHub secret: **`DATABASE_URL`** (production PostgreSQL). Για **Supabase** χρησιμοποίησε το **transaction pooler** URL (pooler host, port 6543, `?sslmode=require`), όχι το direct `db.xxx.supabase.co` (βλ. P1001 / Supabase πάνω).
+   - Χρειάζεται GitHub secret: **`DATABASE_URL`** (production PostgreSQL). Για **Supabase** χρησιμοποίησε το **pooler session mode** URL (pooler host, **port 5432**, `?sslmode=require`), όχι 6543 ούτε direct `db.xxx.supabase.co` (βλ. P1001 / Supabase πάνω).
 
 2. **Backend**  
    - Build Docker image από **`config/docker/Dockerfile.backend`**.  
    - Push στο **GitHub Container Registry** (`ghcr.io/<owner>/advisorai-backend:latest` και `@<sha>`).  
+   - Αν το repo ανήκει σε **organization** και εμφανίζεται σφάλμα *"installation not allowed to Create organization package"*, πρόσθεσε GitHub secret **`GHCR_TOKEN`**: δημιούργησε **Personal Access Token** (Settings → Developer settings → PAT) με scope **`write:packages`** (και `read:packages` αν χρειάζεται) και βάλ’ το ως secret στο repo.  
    - Στο workflow υπάρχουν (commented) optional steps για **Google Cloud Run** ή **Railway**· ξε-σχολιάζεις και ορίζεις τα αντίστοιχα secrets.
 
 3. **Frontend**  
