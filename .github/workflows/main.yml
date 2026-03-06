@@ -168,6 +168,7 @@ jobs:
       #     service: backend
 
   # ---------- CD: Frontend (Vercel) ----------
+  # Runs only when VERCEL_TOKEN is set (Settings → Secrets → Actions). Add VERCEL_ORG_ID and VERCEL_PROJECT_ID too.
   cd-frontend:
     name: CD Frontend (Vercel)
     runs-on: ubuntu-latest
@@ -176,7 +177,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check Vercel secrets
+        id: vercel-check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "deploy=false" >> $GITHUB_OUTPUT
+            echo "::notice::Skipping Vercel deploy: add VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID in Settings → Secrets → Actions to enable."
+          fi
+
       - name: Deploy to Vercel
+        if: steps.vercel-check.outputs.deploy == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
