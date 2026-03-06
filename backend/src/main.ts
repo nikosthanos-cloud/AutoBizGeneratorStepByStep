@@ -1,18 +1,17 @@
 import type { NextFunction, Request, Response } from 'express';
-import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { validateEnv } from './common/validate-env';
 
-// require() so default exports work in CJS build (Railway/Docker)
-const expressRaw = require('express').raw;
+// require() so middleware works in CJS build (Railway/Docker)
+const express = require('express');
 const cookieParser = require('cookie-parser');
 
 async function bootstrap() {
   validateEnv();
 
   const app = await NestFactory.create(AppModule, { bodyParser: false });
-  app.use('/api/webhooks/stripe', expressRaw({ type: 'application/json' }));
+  app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.originalUrl === '/api/webhooks/stripe' && req.method === 'POST') {
       return next();
