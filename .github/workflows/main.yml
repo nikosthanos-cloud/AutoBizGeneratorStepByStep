@@ -66,10 +66,13 @@ jobs:
 
       - name: Lint
         run: npm run lint
+        env:
+          CI: true
 
       - name: Build
         run: npm run build
         env:
+          CI: true
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://api.example.com' }}
 
       - name: Test
@@ -96,10 +99,26 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Set DATABASE_URL (Supabase SSL)
+        env:
+          DB_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::error::DATABASE_URL secret is not set"
+            exit 1
+          fi
+          if echo "$DB_URL" | grep -q 'supabase\.co' && ! echo "$DB_URL" | grep -q 'sslmode='; then
+            if echo "$DB_URL" | grep -q '?'; then
+              echo "DATABASE_URL=${DB_URL}&sslmode=require" >> $GITHUB_ENV
+            else
+              echo "DATABASE_URL=${DB_URL}?sslmode=require" >> $GITHUB_ENV
+            fi
+          else
+            echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+          fi
+
       - name: Prisma migrate deploy
         run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   # ---------- CD: Backend (Docker → Cloud) ----------
   cd-backend:
