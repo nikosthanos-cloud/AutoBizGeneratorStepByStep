@@ -104,9 +104,10 @@ jobs:
           DB_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -z "$DB_URL" ]; then
-            echo "::error::DATABASE_URL secret is not set"
+            echo "::error::DATABASE_URL secret is not set. Add it in Settings → Secrets → Actions."
             exit 1
           fi
+          # Supabase requires SSL; append sslmode=require if missing (fixes P1001)
           if echo "$DB_URL" | grep -q 'supabase\.co' && ! echo "$DB_URL" | grep -q 'sslmode='; then
             if echo "$DB_URL" | grep -q '?'; then
               echo "DATABASE_URL=${DB_URL}&sslmode=require" >> $GITHUB_ENV
@@ -118,7 +119,7 @@ jobs:
           fi
 
       - name: Prisma migrate deploy
-        run: npx prisma migrate deploy
+        run: npm run prisma:migrate:deploy
 
   # ---------- CD: Backend (Docker → Cloud) ----------
   cd-backend:
@@ -168,7 +169,7 @@ jobs:
       #     service: backend
 
   # ---------- CD: Frontend (Vercel) ----------
-  # Runs only when VERCEL_TOKEN is set (Settings → Secrets → Actions). Add VERCEL_ORG_ID and VERCEL_PROJECT_ID too.
+  # Runs only when VERCEL_TOKEN is set. If deploy fails with "Unexpected error": set NEXT_PUBLIC_API_URL in Vercel → Project → Settings → Env Vars, then Redeploy.
   cd-frontend:
     name: CD Frontend (Vercel)
     runs-on: ubuntu-latest
@@ -197,4 +198,5 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: frontend
+          # Pass build env so Next.js build has NEXT_PUBLIC_API_URL (set in repo vars or leave default)
           vercel-args: '--prod'

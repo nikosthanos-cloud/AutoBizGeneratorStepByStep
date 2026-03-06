@@ -145,7 +145,9 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 
 2. **Supabase project:** Στο Supabase Dashboard έλεγξε ότι το project δεν είναι paused (free tier παύει μετά από αδράνεια).
 
-3. **Firewall / CI:** Αν τρέχει σε GitHub Actions ή άλλο δίκτυο, βεβαιώσου ότι επιτρέπεται outbound TCP στο port 5432 προς το host του DB. Σε Supabase, στο Dashboard → Settings → Database δες το "Connection string" και χρησιμοποίησέ το με `?sslmode=require`.
+3. **Firewall / CI:** Αν τρέχει σε GitHub Actions ή άλλο δίκτυο, βεβαιώσου ότι επιτρέπεται outbound TCP στο port 5432 προς το host του DB. Σε Supabase, στο **Dashboard → Settings → Database**:
+   - Δες το "Connection string" και χρησιμοποίησέ το με `?sslmode=require`.
+   - Αν έχεις ενεργό **"Restrict connections"** (IPv4 allowlist), τα GitHub runners μπορεί να μπλοκάρονται. Κάνε **disable** το restrict (ή πρόσθεσε allowlist 0.0.0.0/0 για δοκιμή) ώστε το `prisma migrate deploy` στο CI να μπορεί να συνδεθεί.
 
 ---
 

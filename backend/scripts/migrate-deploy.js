@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 
 function loadEnv() {
+  if (process.env.DATABASE_URL) return; // CI or shell already set it
   const envPath = path.join(__dirname, '..', '.env');
   if (!fs.existsSync(envPath)) return;
   const content = fs.readFileSync(envPath, 'utf8');
