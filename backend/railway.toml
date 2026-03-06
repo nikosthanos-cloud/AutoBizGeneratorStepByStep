@@ -1,0 +1,4 @@
+# Force Railway to use Dockerfile instead of Railpack (avoids "Error creating build plan")
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"

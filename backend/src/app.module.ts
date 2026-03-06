@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -13,6 +14,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([
       { name: 'short', ttl: 60_000, limit: 30 },
