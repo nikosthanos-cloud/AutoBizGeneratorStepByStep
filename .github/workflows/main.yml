@@ -202,7 +202,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: frontend
-          # Pin CLI to avoid "Unexpected error" / npx exit 1 from version drift
-          vercel-version: '33.3.4'
+          # Pin CLI to a version that exists on npm (33.3.4 does not exist)
+          vercel-version: '33.4.1'
           # Build env so Next.js gets NEXT_PUBLIC_API_URL (job env passed via vercel-args; set repo var or Vercel env for real URL)
           vercel-args: '--prod --build-env NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}'

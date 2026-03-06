@@ -209,7 +209,7 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 2. **Backend**  
    - Build Docker image από **`config/docker/Dockerfile.backend`**.  
    - Push στο **GitHub Container Registry** (`ghcr.io/<owner>/advisorai-backend:latest` και `@<sha>`).  
-   - Αν το repo ανήκει σε **organization** και εμφανίζεται σφάλμα *"installation not allowed to Create organization package"*, πρόσθεσε GitHub secret **`GHCR_TOKEN`**: δημιούργησε **Personal Access Token** (Settings → Developer settings → PAT) με scope **`write:packages`** (και `read:packages` αν χρειάζεται) και βάλ’ το ως secret στο repo.  
+   - Για push στο GHCR (ειδικά σε **organization**): χρειάζεται secret **`GHCR_TOKEN`** (Personal Access Token). Αν βλέπεις *"installation not allowed"* ή *"token does not match expected scopes"*: δημιούργησε **Classic** PAT (Settings → Developer settings → **Personal access tokens** → **Tokens (classic)**) με scope **`write:packages`** (επίλεξε το checkbox· μπορεί να χρειαστεί και **`read:packages`**). Μην χρησιμοποιείς Fine-grained PAT χωρίς **Packages: Read and write** για το repo. Βάλ’ το token ως **`GHCR_TOKEN`** στα repository secrets.  
    - Στο workflow υπάρχουν (commented) optional steps για **Google Cloud Run** ή **Railway**· ξε-σχολιάζεις και ορίζεις τα αντίστοιχα secrets.
 
 3. **Frontend**  
