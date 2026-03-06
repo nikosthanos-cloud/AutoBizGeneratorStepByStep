@@ -214,7 +214,8 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 
 3. **Frontend**  
    - Deploy στο **Vercel** με το **Vercel Action** (`amondnet/vercel-action`), `working-directory: frontend`, `--prod`.  
-   - Απαιτούνται GitHub secrets: **`VERCEL_TOKEN`**, **`VERCEL_ORG_ID`**, **`VERCEL_PROJECT_ID`**.
+   - Απαιτούνται GitHub secrets: **`VERCEL_TOKEN`**, **`VERCEL_ORG_ID`**, **`VERCEL_PROJECT_ID`**.  
+   - Αν εμφανίζεται *"Project not found"*: τα IDs πρέπει να αντιστοιχούν στο project που κάνεις deploy. Το πιο αξιόπιστο τρόπο: τοπικά στο **`frontend/`** τρέξε **`npx vercel link`**, διάλεξε το σωστό Vercel project (και team αν χρησιμοποιείς team). Μετά **`cat .vercel/project.json`** — το **`orgId`** είναι το **VERCEL_ORG_ID** και το **`projectId`** το **VERCEL_PROJECT_ID**. Αν το project είναι σε **team**, το `orgId` είναι συχνά τύπου `team_xxxx`.
 
 Άρα: με κάθε push στο `main`, ο κώδικας περνάει από CI, η βάση ενημερώνεται με migrations, το backend image ανεβαίνει στο GHCR (και opcional στο Cloud Run/Railway), και το frontend αναπτύσσεται αυτόματα στο Vercel.
 
