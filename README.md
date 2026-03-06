@@ -210,7 +210,8 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
    - Build Docker image από **`config/docker/Dockerfile.backend`**.  
    - Push στο **GitHub Container Registry** (`ghcr.io/<owner>/advisorai-backend:latest` και `@<sha>`).  
    - Για push στο GHCR (ειδικά σε **organization**): χρειάζεται secret **`GHCR_TOKEN`** (Personal Access Token). Αν βλέπεις *"installation not allowed"* ή *"token does not match expected scopes"*: δημιούργησε **Classic** PAT (Settings → Developer settings → **Personal access tokens** → **Tokens (classic)**) με scope **`write:packages`** (επίλεξε το checkbox· μπορεί να χρειαστεί και **`read:packages`**). Μην χρησιμοποιείς Fine-grained PAT χωρίς **Packages: Read and write** για το repo. Βάλ’ το token ως **`GHCR_TOKEN`** στα repository secrets.  
-   - Στο workflow υπάρχουν (commented) optional steps για **Google Cloud Run** ή **Railway**· ξε-σχολιάζεις και ορίζεις τα αντίστοιχα secrets.
+   - Στο workflow υπάρχουν (commented) optional steps για **Google Cloud Run** ή **Railway**· ξε-σχολιάζεις και ορίζεις τα αντίστοιχα secrets.  
+   - **Backend deploy (Railway):** Για deploy στο **Railway**, import το repo και στο service όρισε **Root Directory** = **`backend`**. Χρησιμοποιείται το **`backend/Dockerfile`** και το **`backend/railway.toml`** (builder = Dockerfile). Ορίστε env vars: `DATABASE_URL`, `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `OPENAI_API_KEY`, `FRONTEND_URL` (Vercel URL). Backend done.
 
 3. **Frontend**  
    - Deploy στο **Vercel** με το **Vercel Action** (`amondnet/vercel-action`), `working-directory: frontend`, `--prod`.  
