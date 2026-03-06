@@ -27,7 +27,8 @@ export async function loginWithPassword(
 
 /** Send a single new message; conversation is tracked via cookie. Returns assistant reply. */
 export async function postChat(message: string): Promise<{ content: string; conversationId?: string }> {
-  const res = await fetch(`${API_BASE}/api/public/chat`, {
+  const url = `${API_BASE}/api/public/chat`;
+  const res = await fetch(url, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -35,6 +36,11 @@ export async function postChat(message: string): Promise<{ content: string; conv
   });
   if (!res.ok) {
     const err = await res.text();
+    if (res.status === 405) {
+      throw new Error(
+        'Ο server δεν δέχεται το αίτημα (405). Στο Vercel, ορίστε NEXT_PUBLIC_API_URL στο URL του backend (Railway), όχι στο Vercel.',
+      );
+    }
     throw new Error(err || `Chat failed: ${res.status}`);
   }
   return res.json();
