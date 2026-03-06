@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Use proxy (/api/backend) when NEXT_PUBLIC_API_URL is not set (e.g. Vercel: set API_URL server-side)
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
+  (typeof window !== 'undefined' ? '/api/backend' : 'http://localhost:3001');
 
 // ------------ Auth (admin login) ------------
 
