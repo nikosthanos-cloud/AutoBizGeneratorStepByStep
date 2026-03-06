@@ -13,8 +13,8 @@ RUN npm ci
 RUN npx prisma generate
 COPY . .
 RUN npm run build
-# Fail the image build if dist is missing (e.g. wrong build context; Railway must use Root Directory = backend)
-RUN test -f dist/main.js || (echo "ERROR: dist/main.js not found. Ensure build context is backend/ and nest build ran." && exit 1)
+# NestJS outputs to dist/src/main.js (sourceRoot: src)
+RUN test -f dist/src/main.js || (echo "ERROR: dist/src/main.js not found. Ensure build context is backend/ and nest build ran." && exit 1)
 
 # Production image (node:20 + OpenSSL so Prisma schema engine works; avoids "Unexpected token E in JSON")
 FROM node:20-alpine AS runner
@@ -35,4 +35,4 @@ RUN npx prisma generate
 EXPOSE 3001
 
 # Run migrations then start the server (database always updated)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
