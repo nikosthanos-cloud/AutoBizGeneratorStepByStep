@@ -92,7 +92,7 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-**Supabase:** Αν χρησιμοποιείς Supabase και πέφτει P1001, τρέξε αντί για `npx prisma migrate deploy` το **`npm run prisma:migrate:deploy`** (προσθέτει αυτόματα `sslmode=require` στο URL από το `.env`).
+**Supabase:** Χρησιμοποίησε πάντα το **transaction pooler** connection (όχι το direct DB). Στο Free Plan το direct host (`db.xxx.supabase.co`) είναι IPv6-only και δεν είναι reachable από GitHub Actions (IPv4). Στο Dashboard → **Project Settings → Database** διάλεξε **Connection string** με **"Use connection pooling"** (host `aws-0-<region>.pooler.supabase.com`, port **6543**) και πρόσθεσε `?sslmode=require`. Βάλε αυτό το URL στο `DATABASE_URL` (τοπικά και στο GitHub secret). Για migrations τρέξε **`npm run prisma:migrate:deploy`** (προσθέτει `sslmode=require` αν λείπει).
 
 Το seed δημιουργεί **admin λογαριασμό**:
 
@@ -133,21 +133,28 @@ npm run dev
 
 ### Database: "Can't reach database server" (P1001)
 
-Αν χρησιμοποιείς **Supabase** (ή άλλο hosted Postgres) και βλέπεις:
+Αν χρησιμοποιείς **Supabase** και βλέπεις:
 
 ```text
 Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 ```
 
-1. **SSL:** Πρόσθεσε στο `DATABASE_URL` query string: **`?sslmode=require`**  
-   Παράδειγμα:  
-   `postgresql://postgres.[ref]:[PASSWORD]@db.[ref].supabase.co:5432/postgres?sslmode=require`
+**Supabase (Free Plan): χρήση transaction pooler (υποχρεωτικό)**  
+Το direct DB host (`db.xxx.supabase.co`) είναι **IPv6-only**· το IPv4 add-on δεν είναι διαθέσιμο στο Free Plan, οπότε GitHub Actions (IPv4) δεν μπορούν να συνδεθούν. Χρησιμοποίησε το **connection pooler**:
 
-2. **Supabase project:** Στο Supabase Dashboard έλεγξε ότι το project δεν είναι paused (free tier παύει μετά από αδράνεια).
+1. **Dashboard** → **Project Settings → Database** → **Connection string**.
+2. Επίλεξε **"Use connection pooling"** (Transaction mode).
+3. Πάρε το URL με host **`aws-0-<region>.pooler.supabase.com`** και port **6543**.
+4. Πρόσθεσε **`?sslmode=require`** στο URL και βάλ’ το ως **`DATABASE_URL`** (τοπικά και στο GitHub Actions secret).
 
-3. **Firewall / CI:** Αν τρέχει σε GitHub Actions ή άλλο δίκτυο, βεβαιώσου ότι επιτρέπεται outbound TCP στο port 5432 προς το host του DB. Σε Supabase, στο **Dashboard → Settings → Database**:
-   - Δες το "Connection string" και χρησιμοποίησέ το με `?sslmode=require`.
-   - Αν έχεις ενεργό **"Restrict connections"** (IPv4 allowlist), τα GitHub runners μπορεί να μπλοκάρονται. Κάνε **disable** το restrict (ή πρόσθεσε allowlist 0.0.0.0/0 για δοκιμή) ώστε το `prisma migrate deploy` στο CI να μπορεί να συνδεθεί.
+Παράδειγμα pooler URL:  
+`postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?sslmode=require`
+
+Επιπλέον:
+
+- **SSL:** Αν χρησιμοποιείς direct URL αλλού, πάντα **`?sslmode=require`**.
+- **Paused project:** Free tier παύει μετά αδράνεια· στο Dashboard κάνε **Restore**.
+- **Restrict connections:** Αν είναι ενεργό, τα runners μπορεί να μπλοκάρονται· disable ή allowlist αν χρειάζεται.
 
 ---
 
@@ -197,7 +204,7 @@ Error: P1001: Can't reach database server at `db.xxx.supabase.co:5432`
 
 1. **Prisma Sync**  
    - Τρέχει `npx prisma migrate deploy` στο backend.  
-   - Χρειάζεται GitHub secret: **`DATABASE_URL`** (production PostgreSQL).
+   - Χρειάζεται GitHub secret: **`DATABASE_URL`** (production PostgreSQL). Για **Supabase** χρησιμοποίησε το **transaction pooler** URL (pooler host, port 6543, `?sslmode=require`), όχι το direct `db.xxx.supabase.co` (βλ. P1001 / Supabase πάνω).
 
 2. **Backend**  
    - Build Docker image από **`config/docker/Dockerfile.backend`**.  

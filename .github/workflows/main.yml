@@ -125,7 +125,7 @@ jobs:
   cd-backend:
     name: CD Backend
     runs-on: ubuntu-latest
-    needs: [ci-backend, prisma-sync]
+    needs: [ci-backend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -169,12 +169,15 @@ jobs:
       #     service: backend
 
   # ---------- CD: Frontend (Vercel) ----------
-  # Runs only when VERCEL_TOKEN is set. If deploy fails with "Unexpected error": set NEXT_PUBLIC_API_URL in Vercel → Project → Settings → Env Vars, then Redeploy.
+  # Runs only when VERCEL_TOKEN is set. If deploy fails: set NEXT_PUBLIC_API_URL (repo variable or Vercel env), pin vercel-version, check scope for teams.
   cd-frontend:
     name: CD Frontend (Vercel)
     runs-on: ubuntu-latest
     needs: [ci-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      # So Vercel build has API URL (set in repo Settings → Variables, or override in Vercel project env)
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL != '' && vars.NEXT_PUBLIC_API_URL || 'https://api.example.com' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -198,5 +201,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: frontend
-          # Pass build env so Next.js build has NEXT_PUBLIC_API_URL (set in repo vars or leave default)
-          vercel-args: '--prod'
+          # Pin CLI to avoid "Unexpected error" / npx exit 1 from version drift
+          vercel-version: '33.3.4'
+          # Build env so Next.js gets NEXT_PUBLIC_API_URL (job env passed via vercel-args; set repo var or Vercel env for real URL)
+          vercel-args: '--prod --build-env NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}'
