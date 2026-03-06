@@ -1,6 +1,6 @@
 # advisorai.gr – Backend (NestJS), Section 2 Tech Stack
 # Build context: backend/ (run from backend: docker build -t advisorai-backend .)
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -14,8 +14,10 @@ RUN npx prisma generate
 COPY . .
 RUN npm run build
 
-# Production image
-FROM node:18-alpine AS runner
+# Production image (node:20 + OpenSSL so Prisma schema engine works; avoids "Unexpected token E in JSON")
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
