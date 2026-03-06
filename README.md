@@ -92,6 +92,8 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
+**Supabase:** Αν χρησιμοποιείς Supabase και πέφτει P1001, τρέξε αντί για `npx prisma migrate deploy` το **`npm run prisma:migrate:deploy`** (προσθέτει αυτόματα `sslmode=require` στο URL από το `.env`).
+
 Το seed δημιουργεί **admin λογαριασμό**:
 
 - **Email:** `nikosthanos@gmail.com`  

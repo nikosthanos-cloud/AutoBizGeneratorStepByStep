@@ -12,6 +12,7 @@
     "test": "echo \"No tests configured\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "node scripts/migrate-deploy.js",
     "prisma:seed": "npx prisma db seed"
   },
   "prisma": {

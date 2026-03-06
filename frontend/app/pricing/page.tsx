@@ -7,7 +7,16 @@ export const metadata: Metadata = {
 };
 
 /** Section 1 & 7: Starter / Pro / Enterprise tiers, features, and prices. */
-const PRICING_TIERS = [
+type PricingTier = {
+  name: string;
+  price: number;
+  currency: string;
+  description: string;
+  features: string[];
+  highlighted?: boolean;
+};
+
+const PRICING_TIERS: PricingTier[] = [
   {
     name: 'Starter',
     price: 299,
@@ -50,7 +59,7 @@ const PRICING_TIERS = [
       'Admin dashboard access',
     ],
   },
-] as const;
+];
 
 function PricingCard({
   name,
