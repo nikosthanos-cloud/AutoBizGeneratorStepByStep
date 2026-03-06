@@ -1,14 +1,18 @@
 import cookieParser from 'cookie-parser';
-import express, { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { validateEnv } from './common/validate-env';
+
+// express.raw() for Stripe webhook (must use require so .raw is available in CJS build)
+const expressRaw = require('express').raw;
 
 async function bootstrap() {
   validateEnv();
 
   const app = await NestFactory.create(AppModule, { bodyParser: false });
-  app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
+  app.use('/api/webhooks/stripe', expressRaw({ type: 'application/json' }));
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.originalUrl === '/api/webhooks/stripe' && req.method === 'POST') {
       return next();
